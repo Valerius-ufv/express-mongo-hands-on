@@ -1,0 +1,268 @@
+Queries de Búsqueda (Find)
+Encuentra todas las películas lanzadas después del año 2000:
+
+
+db.movies.find({ year: { $gt: 2000 } })
+
+Obtén las películas con más de 2 géneros:
+db.movies.find({ genres: { $size: { $gt: 2 } } })
+
+Busca películas que tengan "Train" en su título:
+
+db.movies.find({ title: /Train/i })
+Encuentra películas con una duración entre 90 y 120 minutos:
+db.movies.find({ runtime: { $gte: 90, $lte: 120 } })
+{ runtime: { $gte: 280, $lte: 350 } }
+
+Busca películas con comentarios (num_mflix_comments) mayores a 10:
+db.movies.find({ num_mflix_comments: { $gt: 10 } })
+
+Queries de Agregación (Aggregation)
+Cuenta cuántas películas hay por cada año:
+db.movies.aggregate([
+    { $group: { _id: "$year", totalMovies: { $sum: 1 } } },
+    { $sort: { totalMovies: -1 } }
+])
+
+Obtén los géneros más frecuentes en las películas:
+db.movies.aggregate([
+    { $unwind: "$genres" },
+    { $group: { _id: "$genres", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+])
+
+Manipulación de Arrays
+Añade un nuevo género a las películas lanzadas antes de 1950:
+db.movies.updateMany(
+    { year: { $lt: 1950 } },
+    { $addToSet: { genres: "Classic" } }
+)
+Elimina un género específico ("Comedy") de las películas:
+db.movies.updateMany(
+    { genres: "Comedy" },
+    { $pull: { genres: "Comedy" } }
+)
+
+Reemplaza el array de géneros de una película específica:
+db.movies.updateOne(
+    { title: "The Great Train Robbery" },
+    { $set: { genres: ["Action", "Adventure"] } }
+)
+
+Operaciones de Inserción
+Inserta una nueva película:
+db.movies.insertOne({
+    title: "New Movie",
+    year: 2023,
+    genres: ["Sci-Fi", "Drama"],
+    runtime: 120,
+    cast: ["Actor A", "Actor B"],
+    languages: ["English"],
+    released: new Date("2023-11-01"),
+    directors: ["Director X"]
+})
+
+Eliminación de Documentos
+
+Elimina todas las películas sin géneros definidos:
+db.movies.deleteMany({ genres: { $exists: false } })
+
+Elimina películas lanzadas antes de 1900:
+db.movies.deleteMany({ year: { $lt: 1900 } })
+
+Consultas Combinadas (Find + Proyección + Ordenación)
+Encuentra las 5 películas mejor valoradas por IMDb:
+db.movies.find({}, { title: 1, "imdb.rating": 1 })
+    .sort({ "imdb.rating": -1 })
+    .limit(5)
+
+Encuentra películas dirigidas por un director específico, mostrando solo título y año:
+db.movies.find({ directors: "Steven Spielberg" }, { title: 1, year: 1, _id: 0 })
+
+Otras Queries Interesantes
+Encuentra películas que hayan ganado premios:
+db.movies.find({ "awards.wins": { $gte: 1 } })
+
+Busca películas con cast que incluya "Leonardo DiCaprio":
+db.movies.find({ cast: "Leonardo DiCaprio" })
+
+
+Encuentra películas que hayan sido calificadas como "PG-13":
+db.movies.find({ rated: "PG-13" })
+
+Obtén las películas más comentadas:
+db.movies.find().sort({ num_mflix_comments: -1 }).limit(10)
+
+Encuentra películas lanzadas entre 2000 y 2010 y con más de 5 comentarios:
+db.movies.find({
+    $and: [
+        { year: { $gte: 2000, $lte: 2010 } },
+        { num_mflix_comments: { $gt: 5 } }
+    ]
+})
+
+
+
+
+
+
+Queries de Búsqueda Avanzada
+Encuentra películas cuyo título contenga exactamente tres palabras:
+
+db.movies.find({
+    title: { $regex: /^\b\w+\b \b\w+\b \b\w+\b$/, $options: "i" }
+})
+
+
+Obtén películas que tienen más de 3 directores y han sido lanzadas después de 1990:
+
+db.movies.find({
+    $and: [
+        { "directors.3": { $exists: true } },
+        { year: { $gt: 1990 } }
+    ]
+})
+
+Busca películas cuya duración sea divisible por 10 y que tengan comentarios:
+db.movies.find({
+    $and: [
+        { runtime: { $mod: [10, 0] } },
+        { num_mflix_comments: { $gt: 0 } }
+    ]
+})
+
+Encuentra películas donde todos los géneros sean "Drama" o "Action":
+db.movies.find({
+    genres: { $all: ["Drama", "Action"] }
+})
+
+Manipulación de Arrays Compleja
+Reemplaza el primer elemento del array de géneros con "Adventure" en todas las películas:
+db.movies.updateMany(
+    { genres: { $exists: true, $not: { $size: 0 } } },
+    { $set: { "genres.0": "Adventure" } }
+)
+Añade un nuevo cast solo si no existe ya en el array:
+db.movies.updateMany(
+    { cast: { $exists: true } },
+    { $addToSet: { cast: "New Actor" } }
+)
+Encuentra películas donde el número de elementos en genres sea igual al número de elementos en cast:
+db.movies.find({
+    $expr: { $eq: [{ $size: "$genres" }, { $size: "$cast" }] }
+})
+
+Operaciones de Escritura Avanzadas
+Inserta múltiples documentos y asegura que no se dupliquen (upsert):
+db.movies.updateMany(
+    { title: "My Unique Movie" },
+    {
+        $set: {
+            title: "My Unique Movie",
+            year: 2024,
+            genres: ["Experimental"],
+            runtime: 120,
+            cast: ["John Doe"]
+        }
+    },
+    { upsert: true }
+)
+
+Elimina películas cuyo array de géneros esté vacío o no exista:
+db.movies.deleteMany({
+    $or: [
+        { genres: { $exists: false } },
+        { genres: { $size: 0 } }
+    ]
+})
+
+Consultas de Agregación Complejas
+Calcula la película con la duración más larga en cada género:
+db.movies.aggregate([
+    { $unwind: "$genres" },
+    { $group: { _id: "$genres", maxRuntime: { $max: "$runtime" } } },
+    { $sort: { maxRuntime: -1 } }
+])
+
+Agrupa las películas por década y cuenta cuántas hay por cada una:
+db.movies.aggregate([
+    {
+        $project: {
+            decade: { $concat: [{ $substr: ["$year", 0, 3] }, "0s"] }
+        }
+    },
+    { $group: { _id: "$decade", count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+])
+
+Encuentra la película con más comentarios en cada país:
+db.movies.aggregate([
+    { $unwind: "$countries" },
+    { $group: { _id: "$countries", mostComments: { $max: "$num_mflix_comments" } } },
+    { $sort: { mostComments: -1 } }
+])
+
+Consultas con Expresiones Condicionales
+
+Añade una nueva propiedad commentDensity calculada como num_mflix_comments / runtime:
+db.movies.updateMany(
+    { runtime: { $gt: 0 } },
+    { $set: { commentDensity: { $divide: ["$num_mflix_comments", "$runtime"] } } }
+)
+
+Busca películas que hayan sido lanzadas en día impar y mes par:
+db.movies.find({
+    $expr: {
+        $and: [
+            { $eq: [{ $mod: [{ $dayOfMonth: "$released" }, 2] }, 1] },
+            { $eq: [{ $mod: [{ $month: "$released" }, 2] }, 0] }
+        ]
+    }
+})
+
+Clasifica películas como "short", "medium", o "long" según su duración:
+db.movies.aggregate([
+    {
+        $project: {
+            title: 1,
+            runtime: 1,
+            lengthCategory: {
+                $switch: {
+                    branches: [
+                        { case: { $lte: ["$runtime", 90] }, then: "short" },
+                        { case: { $lte: ["$runtime", 150] }, then: "medium" }
+                    ],
+                    default: "long"
+                }
+            }
+        }
+    }
+])
+
+Operaciones en Documentos Anidados
+
+Encuentra películas con premios ganados (donde awards.wins sea mayor a 0):
+db.movies.find({ "awards.wins": { $gt: 0 } })
+
+Actualiza las películas para añadir un campo oscarEligible basado en el año (antes de 2020):
+db.movies.updateMany(
+    { year: { $lt: 2020 } },
+    { $set: { oscarEligible: true } }
+)
+
+Encuentra películas donde la calificación (rated) esté ausente o sea desconocida:
+db.movies.find({
+    $or: [
+        { rated: { $exists: false } },
+        { rated: { $in: ["", "Not Rated"] } }
+    ]
+})
+
+Integración y Optimización
+
+Combina búsquedas avanzadas con índices:
+db.movies.createIndex({ year: 1, runtime: -1 });
+db.movies.find({ year: { $gte: 2000 }, runtime: { $gte: 100 } }).sort({ runtime: -1 })
+
+Usa una proyección para incluir solo los campos necesarios y mejorar el rendimiento:
+db.movies.find({ genres: "Action" }, { title: 1, year: 1, runtime: 1, _id: 0 })

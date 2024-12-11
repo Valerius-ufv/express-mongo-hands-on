@@ -18,8 +18,11 @@ app.use(express.static("public"));
 
 // Connect to a MongoDB database named todolistDB with a deprecation fix for the URL parser
 //mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true });
+//const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.h5kauwo.mongodb.net/?retryWrites=true&w=majority"
 
-const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.h5kauwo.mongodb.net/?retryWrites=true&w=majority"
+
+
+const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.n87gd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose.connect(MONGODB_ATLAS_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
@@ -112,6 +115,8 @@ app.post("/", async (req, res) => {
             res.redirect("/" + listName);
         } catch (err) {
             // Log any errors and send a server error response
+            // The code includes error handling for the case where there's an issue finding a custom list or saving the item. In such cases, 
+            // an error message is logged to the console, and a 500 server error response is sent to the client.
             console.log(err);
             res.status(500).send("Error saving the item");
         }
@@ -153,5 +158,5 @@ app.get("/about", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, function () {
-    console.log("Server started on port ${PORT}");
+    console.log("Server started on port", PORT);
 });
