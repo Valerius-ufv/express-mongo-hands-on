@@ -22,7 +22,7 @@ app.use(express.static("public"));
 
 
 
-const MONGODB_ATLAS_URI = "mongodb+srv://fjbanezares:Pepito123@cluster0.n87gd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const MONGODB_ATLAS_URI =  "mongodb+srv://divasa2001:pepito123@cluster0.bwnhb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 mongoose.connect(MONGODB_ATLAS_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
